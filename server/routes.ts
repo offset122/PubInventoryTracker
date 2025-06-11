@@ -97,8 +97,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      const userId = req.user.id;
+      let user = await storage.getUser(userId);
+      
+      // Create user if doesn't exist
+      if (!user) {
+        user = await storage.upsertUser({
+          id: req.user.id,
+          email: req.user.email,
+          firstName: req.user.firstName,
+          lastName: req.user.lastName,
+          profileImageUrl: req.user.profileImageUrl
+        });
+      }
+      
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -109,7 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Product routes
   app.get("/api/products", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const products = await storage.getProducts(userId);
       res.json(products);
     } catch (error) {
@@ -120,7 +132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/products", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const productData = insertProductSchema.parse(req.body);
       const product = await storage.createProduct({ ...productData, userId });
       res.json(product);
@@ -136,7 +148,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/products/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const productId = parseInt(req.params.id);
       const productData = insertProductSchema.partial().parse(req.body);
       const product = await storage.updateProduct(productId, productData, userId);
@@ -153,7 +165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/products/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const productId = parseInt(req.params.id);
       await storage.deleteProduct(productId, userId);
       res.json({ message: "Product deleted successfully" });
@@ -166,7 +178,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Purchase routes
   app.get("/api/purchases", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const purchases = await storage.getPurchases(userId);
       res.json(purchases);
     } catch (error) {
@@ -177,7 +189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/purchases", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const purchaseData = insertPurchaseSchema.parse(req.body);
       const purchase = await storage.createPurchase({ ...purchaseData, userId });
       res.json(purchase);
@@ -194,7 +206,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Sale routes
   app.get("/api/sales", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const sales = await storage.getSales(userId);
       res.json(sales);
     } catch (error) {
@@ -205,7 +217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/sales", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const saleData = insertSaleSchema.parse(req.body);
       const sale = await storage.createSale({ ...saleData, userId });
       res.json(sale);
@@ -224,7 +236,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Dashboard and analytics routes
   app.get("/api/dashboard/stats", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const stats = await storage.getDashboardStats(userId);
       res.json(stats);
     } catch (error) {
@@ -235,7 +247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/dashboard/top-products", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const topProducts = await storage.getTopSellingProducts(userId);
       res.json(topProducts);
     } catch (error) {
@@ -246,7 +258,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/dashboard/recent-transactions", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const transactions = await storage.getRecentTransactions(userId);
       res.json(transactions);
     } catch (error) {
@@ -257,7 +269,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/inventory/low-stock", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const lowStockProducts = await storage.getLowStockProducts(userId);
       res.json(lowStockProducts);
     } catch (error) {
@@ -269,7 +281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI Insights routes
   app.get("/api/ai/insights", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const type = (req.query.type as 'sales' | 'inventory' | 'profit') || 'sales';
       const insights = await generateAIInsights(userId, type);
       res.json(insights);
@@ -281,7 +293,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/ai/insights/detailed", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { analysisType, dateRange, specificProducts } = req.body;
       
       // Generate detailed insights based on parameters

@@ -1,32 +1,55 @@
-import { auth } from './firebase';
 import type { RequestHandler } from 'express';
+import session from 'express-session';
+
+// Session configuration
+export function getSession() {
+  return session({
+    secret: 'firebase-demo-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: false, // Set to true in production with HTTPS
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    },
+  });
+}
 
 // Simple session-based auth for demo purposes
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
-  // For demo purposes, we'll create a mock user session
-  // In a real app, you'd verify Firebase ID tokens here
+  // Check if user is in session
+  const sessionUser = (req as any).session?.user;
   
-  const mockUser = {
-    id: 'demo_user_123',
-    email: 'manager@clubjamuhuri.com',
-    firstName: 'Club',
-    lastName: 'Manager',
-    profileImageUrl: null
-  };
+  if (!sessionUser) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
   
-  (req as any).user = mockUser;
+  (req as any).user = sessionUser;
   next();
 };
 
-// Mock login endpoint that creates a demo session
+// Demo auth setup with session management
 export const setupDemoAuth = (app: any) => {
+  // Setup session middleware
+  app.use(getSession());
+  
   app.get('/api/login', (req: any, res: any) => {
-    // In a real app, this would redirect to Firebase Auth
+    // Create demo user session
+    const demoUser = {
+      id: 'demo_user_123',
+      email: 'manager@clubjamuhuri.com',
+      firstName: 'Club',
+      lastName: 'Manager',
+      profileImageUrl: null
+    };
+    
+    req.session.user = demoUser;
     res.redirect('/');
   });
   
   app.get('/api/logout', (req: any, res: any) => {
-    // Clear session and redirect
-    res.redirect('/');
+    req.session.destroy(() => {
+      res.redirect('/');
+    });
   });
 };

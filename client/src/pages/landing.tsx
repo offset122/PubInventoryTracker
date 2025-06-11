@@ -13,11 +13,11 @@ export default function Landing() {
         <div className="text-center mb-16">
           <div className="flex items-center justify-center mb-6">
             <Beer className="h-16 w-16 text-blue-600 mr-4" />
-            <h1 className="text-5xl font-bold text-gray-900">PubKeeper</h1>
+            <h1 className="text-5xl font-bold text-gray-900">Club Jamuhuri</h1>
           </div>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Complete bookkeeping solution for your pub business with inventory management, 
-            profit tracking, and AI-powered insights.
+            Complete bookkeeping solution for Club Jamuhuri with inventory management, 
+            profit tracking, and AI-powered business insights.
           </p>
         </div>
 

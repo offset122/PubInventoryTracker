@@ -64,7 +64,7 @@ export default function Dashboard() {
               {/* Page Header */}
               <div className="mb-8">
                 <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-                <p className="mt-2 text-sm text-gray-600">Overview of your pub's performance</p>
+                <p className="mt-2 text-sm text-gray-600">Overview of Club Jamuhuri's performance</p>
               </div>
 
               {/* Stats Cards */}

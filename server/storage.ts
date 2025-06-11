@@ -138,13 +138,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getRecentPurchases(userId: string, limit = 10): Promise<(Purchase & { product: Product })[]> {
-    return await db
-      .select()
+    const results = await db
+      .select({
+        purchase: purchases,
+        product: products,
+      })
       .from(purchases)
       .innerJoin(products, eq(purchases.productId, products.id))
       .where(eq(purchases.userId, userId))
       .orderBy(desc(purchases.createdAt))
       .limit(limit);
+    
+    return results.map(result => ({
+      ...result.purchase,
+      product: result.product,
+    }));
   }
 
   // Sale operations
@@ -185,13 +193,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getRecentSales(userId: string, limit = 10): Promise<(Sale & { product: Product })[]> {
-    return await db
-      .select()
+    const results = await db
+      .select({
+        sale: sales,
+        product: products,
+      })
       .from(sales)
       .innerJoin(products, eq(sales.productId, products.id))
       .where(eq(sales.userId, userId))
       .orderBy(desc(sales.createdAt))
       .limit(limit);
+    
+    return results.map(result => ({
+      ...result.sale,
+      product: result.product,
+    }));
   }
 
   // Analytics operations

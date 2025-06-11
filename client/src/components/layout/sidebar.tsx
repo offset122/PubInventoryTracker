@@ -42,7 +42,7 @@ export function Sidebar() {
           <div className="flex items-center flex-shrink-0 px-4 mb-8">
             <div className="flex items-center">
               <Beer className="h-8 w-8 text-blue-600 mr-3" />
-              <h1 className="text-xl font-bold text-gray-800">PubKeeper</h1>
+              <h1 className="text-xl font-bold text-gray-800">Club Jamuhuri</h1>
             </div>
           </div>
           
@@ -79,7 +79,7 @@ export function Sidebar() {
                   <p className="text-sm font-medium text-gray-700 truncate">
                     {user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.email || 'User'}
                   </p>
-                  <p className="text-xs font-medium text-gray-500">Pub Manager</p>
+                  <p className="text-xs font-medium text-gray-500">Club Manager</p>
                 </div>
               </div>
               <Button

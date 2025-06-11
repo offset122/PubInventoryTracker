@@ -336,4 +336,6 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-export const storage = new DatabaseStorage();
+// Using Firebase storage instead of PostgreSQL
+import { firebaseStorage } from "./firebaseStorage";
+export const storage = firebaseStorage;

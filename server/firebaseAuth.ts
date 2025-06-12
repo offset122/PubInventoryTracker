@@ -1,55 +1,45 @@
-import type { RequestHandler } from 'express';
-import session from 'express-session';
+// Removed demo user session logic
+// import session from 'express-session';
 
-// Session configuration
-export function getSession() {
-  return session({
-    secret: 'firebase-demo-secret-key',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      secure: false, // Set to true in production with HTTPS
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    },
-  });
-}
+// Removed session configuration
+// export function getSession() {
+//   return session({
+//     secret: 'your-secret-key',
+//     resave: false,
+//     saveUninitialized: false,
+//     cookie: { secure: true }
+//   });
+// }
 
-// Simple session-based auth for demo purposes
-export const isAuthenticated: RequestHandler = async (req, res, next) => {
-  // Check if user is in session
-  const sessionUser = (req as any).session?.user;
-  
-  if (!sessionUser) {
-    return res.status(401).json({ message: "Unauthorized" });
+// Removed demo auth setup
+// export function setupAuth(app) {
+//   app.use(getSession());
+//   // Removed demo user session creation
+// }
+
+// Removed logout logic
+// export function logout(req, res) {
+//   req.session.destroy(() => {
+//     res.redirect('/');
+//   });
+// }
+
+import { Request, Response, NextFunction } from 'express';
+import { auth } from './firebase';
+
+// Middleware to verify Firebase ID token from Authorization header
+export async function verifyFirebaseToken(req: Request, res: Response, next: NextFunction) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'No token provided' });
   }
-  
-  (req as any).user = sessionUser;
-  next();
-};
 
-// Demo auth setup with session management
-export const setupDemoAuth = (app: any) => {
-  // Setup session middleware
-  app.use(getSession());
-  
-  app.get('/api/login', (req: any, res: any) => {
-    // Create demo user session
-    const demoUser = {
-      id: 'demo_user_123',
-      email: 'manager@clubjamuhuri.com',
-      firstName: 'Club',
-      lastName: 'Manager',
-      profileImageUrl: null
-    };
-    
-    req.session.user = demoUser;
-    res.redirect('/');
-  });
-  
-  app.get('/api/logout', (req: any, res: any) => {
-    req.session.destroy(() => {
-      res.redirect('/');
-    });
-  });
-};
+  const idToken = authHeader.split('Bearer ')[1];
+  try {
+    const decodedToken = await auth.verifyIdToken(idToken);
+    (req as any).user = decodedToken;
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: 'Invalid or expired token' });
+  }
+}

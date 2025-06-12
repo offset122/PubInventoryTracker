@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupSimpleAuth, isAuthenticated } from "./simpleAuth";
+import { verifyFirebaseToken } from "./firebaseAuth";
 import { insertProductSchema, insertPurchaseSchema, insertSaleSchema } from "@shared/schema";
 import { z } from "zod";
 
@@ -92,10 +92,10 @@ async function generateAIInsights(userId: string, type: 'sales' | 'inventory' | 
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
-  setupSimpleAuth(app);
+  // setupSimpleAuth(app);
 
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.get('/api/auth/user', verifyFirebaseToken, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       let user = await storage.getUser(userId);
@@ -119,7 +119,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Product routes
-  app.get("/api/products", isAuthenticated, async (req: any, res) => {
+  app.get("/api/products", verifyFirebaseToken, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const products = await storage.getProducts(userId);
@@ -130,7 +130,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/products", isAuthenticated, async (req: any, res) => {
+  app.post("/api/products", verifyFirebaseToken, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const productData = insertProductSchema.parse(req.body);
@@ -146,7 +146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/products/:id", isAuthenticated, async (req: any, res) => {
+  app.put("/api/products/:id", verifyFirebaseToken, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const productId = parseInt(req.params.id);
@@ -163,7 +163,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/products/:id", isAuthenticated, async (req: any, res) => {
+  app.delete("/api/products/:id", verifyFirebaseToken, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const productId = parseInt(req.params.id);
@@ -176,7 +176,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Purchase routes
-  app.get("/api/purchases", isAuthenticated, async (req: any, res) => {
+  app.get("/api/purchases", verifyFirebaseToken, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const purchases = await storage.getPurchases(userId);
@@ -187,7 +187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/purchases", isAuthenticated, async (req: any, res) => {
+  app.post("/api/purchases", verifyFirebaseToken, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const purchaseData = insertPurchaseSchema.parse(req.body);
@@ -204,7 +204,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Sale routes
-  app.get("/api/sales", isAuthenticated, async (req: any, res) => {
+  app.get("/api/sales", verifyFirebaseToken, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const sales = await storage.getSales(userId);
@@ -215,7 +215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/sales", isAuthenticated, async (req: any, res) => {
+  app.post("/api/sales", verifyFirebaseToken, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const saleData = insertSaleSchema.parse(req.body);
@@ -234,7 +234,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dashboard and analytics routes
-  app.get("/api/dashboard/stats", isAuthenticated, async (req: any, res) => {
+  app.get("/api/dashboard/stats", verifyFirebaseToken, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const stats = await storage.getDashboardStats(userId);
@@ -245,7 +245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/dashboard/top-products", isAuthenticated, async (req: any, res) => {
+  app.get("/api/dashboard/top-products", verifyFirebaseToken, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const topProducts = await storage.getTopSellingProducts(userId);
@@ -256,7 +256,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/dashboard/recent-transactions", isAuthenticated, async (req: any, res) => {
+  app.get("/api/dashboard/recent-transactions", verifyFirebaseToken, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const transactions = await storage.getRecentTransactions(userId);
@@ -267,7 +267,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/inventory/low-stock", isAuthenticated, async (req: any, res) => {
+  app.get("/api/inventory/low-stock", verifyFirebaseToken, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const lowStockProducts = await storage.getLowStockProducts(userId);
@@ -279,7 +279,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AI Insights routes
-  app.get("/api/ai/insights", isAuthenticated, async (req: any, res) => {
+  app.get("/api/ai/insights", verifyFirebaseToken, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const type = (req.query.type as 'sales' | 'inventory' | 'profit') || 'sales';
@@ -291,7 +291,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/ai/insights/detailed", isAuthenticated, async (req: any, res) => {
+  app.post("/api/ai/insights/detailed", verifyFirebaseToken, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { analysisType, dateRange, specificProducts } = req.body;
